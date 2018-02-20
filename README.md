@@ -1,2 +1,2 @@
-# cgv_game
-Contains a game made with Avi and Niambh for the computer graphics and visualization course
+# cgv_course
+Contains labs and stuff from computer graphics and visualization course at wits university
