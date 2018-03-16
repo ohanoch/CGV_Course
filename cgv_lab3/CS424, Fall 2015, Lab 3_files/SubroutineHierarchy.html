@@ -27,19 +27,23 @@
      *  color before this function is called.
      */
     function drawWorld() {
-
-        // TODO: Draw the content of the scene.
-        //rotatingRect();  // (DELETE THIS EXAMPLE)
+		
+		//placing green wheel seesaw
 		graphics.save();
 		graphics.scale(0.9,0.9);
 		graphics.translate(2.5,2.3);
 		wheel_seesaw(5, "green");
 		graphics.restore();
+
+
+		//placing blue wheel seesaw
 		graphics.save();
 		graphics.translate(0,-0.75);
 		graphics.scale(1.4,1.4);
 		wheel_seesaw(5, "blue");
 		graphics.restore();
+
+		//placing purple wheel seesaw
 		graphics.save();
 		graphics.scale(1.1,1.1);
 		graphics.translate(-2,1.8);
@@ -53,11 +57,10 @@
      */
     function updateFrame() {
         frameNumber++;
-        // TODO: If other updates are needed for the next frame, do them here.
+
     }
  
  
-     // TODO: Define methods for drawing the objects in the scene.
     
     function rotatingRect() { // (DELETE THIS EXAMPLE)
         graphics.save();  // (It might be necessary to save/restore transform and color)
@@ -107,7 +110,9 @@
 		graphics.fill();
 	}
 
-	function wheel(n_stokes){//wheel of radius r and l lines
+	//create rotating wheel
+	//input: number of stokes per wheel
+	function wheel(n_stokes){
 		graphics.save();
 		graphics.rotate( (frameNumber*0.75) * Math.PI/180 );
 		circle();
@@ -115,7 +120,9 @@
 		graphics.restore();
 	}
 
-	function circle_of_lines(n_stokes){//circle of l lines with inner radius r1 and outer radius r2
+	//circle of lines in a circle for making wheel
+	//input: number of lines
+	function circle_of_lines(n_stokes){
 		for(var i=0; i<n_stokes; i++){
 			graphics.save();
 			graphics.rotate(i*Math.PI/n_stokes);
@@ -125,6 +132,7 @@
 		}
 	}
 	
+	//creates 2 wheels on the edge of a abr
 	function wheel_bar(n_stokes){
 		graphics.save();
 		graphics.translate(-1,0);
@@ -141,10 +149,11 @@
 		graphics.restore();
 	}
 
+	// create complete wheel seesaw
+	// input: number of stokes per wheel, color of base of seesaw
 	function wheel_seesaw(n_stokes, color){
-		graphics.save();
-		graphics.rotate( (frameNumber*0.75) * Math.PI/180 );
-		//graphics.rotate(Math.PI/1.1)
+		graphics.save(); 
+		graphics.rotate( (frameNumber*0.75) * Math.PI/180 ); //rotates wheelbar
 		wheel_bar(n_stokes)
 		graphics.restore();		
 		graphics.save();

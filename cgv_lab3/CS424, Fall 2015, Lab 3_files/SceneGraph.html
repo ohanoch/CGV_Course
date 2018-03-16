@@ -42,21 +42,21 @@
 
         world = new CompoundObject();  // Root node for the scene graph.
 
-        // TODO: Create objects and add them to the scene graph.
-        // rotatingRect = new TransformedObject(filledRect);   // (DELETE THIS EXAMPLE)
-	//circle.setScale(2,2).setColor("red"); 
 		wheel = new CompoundObject();
+
+		//create wheel lines
 		for (var i = 0; i< 5; i++){
 			var wheel_line = new TransformedObject(line);
 			wheel_line.setRotation(i*180/5);
 			wheel.add(wheel_line);
 		}
 		var wheel_circle = new TransformedObject(circle);
-        wheel.add(circle);
+        wheel.add(circle);  //add wheel circle
 		
 		
-		rotatingWheelBar = new CompoundObject();
+		rotatingWheelBar = new CompoundObject();  //object for two wheels and a bar
 
+		// adding objects to rotatingWheelBar
 		rotatingLeftWheel = new TransformedObject(wheel);
 		rotatingLeftWheel.setTranslation(-1,0);
 		rotatingWheelBar.add(rotatingLeftWheel);
@@ -67,13 +67,7 @@
 		wheelBarRect.setScale(2.1,0.2).setColor("red");
 		rotatingWheelBar.add(wheelBarRect);
 
-		//wheelSeesaw = new CompoundObject();
-		//var wheelBarForSeesaw = new TransformedObject(rotatingWheelBar);
-		//var triangleBarForSeesaw = new TransformedObject(filledTriangle);
-		//triangleBarForSeesaw.setTranslation(0,-1.5).setScale(0.5,1.5).setColor("");
-		//wheelSeesaw.add(wheelBarForSeesaw)
-		//wheelSeesaw.add(triangleBarForSeesaw)
-
+		// create general purple base wheel bar object
 		wheelSeesawPurple = new CompoundObject();
 		wheelBarForSeesawPurple = new TransformedObject(rotatingWheelBar);
 		var triangleBarForSeesawPurple = new TransformedObject(filledTriangle);
@@ -81,6 +75,7 @@
 		wheelSeesawPurple.add(wheelBarForSeesawPurple);
 		wheelSeesawPurple.add(triangleBarForSeesawPurple);
 
+		//create general blue base wheel bar object
 		wheelSeesawBlue = new CompoundObject();
 		wheelBarForSeesawBlue = new TransformedObject(rotatingWheelBar);
 		var triangleBarForSeesawBlue = new TransformedObject(filledTriangle);
@@ -88,6 +83,7 @@
 		wheelSeesawBlue.add(wheelBarForSeesawBlue);
 		wheelSeesawBlue.add(triangleBarForSeesawBlue);
 
+		// create general green base wheel bar object
 		wheelSeesawGreen = new CompoundObject();
 		wheelBarForSeesawGreen = new TransformedObject(rotatingWheelBar);
 		var triangleBarForSeesawGreen = new TransformedObject(filledTriangle);
@@ -95,6 +91,7 @@
 		wheelSeesawGreen.add(wheelBarForSeesawGreen);
 		wheelSeesawGreen.add(triangleBarForSeesawGreen);
 		
+		// create specific seesaws and translate to good location 
 		var wheelSeesawGreenNE = new TransformedObject(wheelSeesawGreen);
 		var wheelSeesawBlueS = new TransformedObject(wheelSeesawBlue);
 		var wheelSeesawPurpleNW = new TransformedObject(wheelSeesawPurple);
@@ -102,6 +99,7 @@
 		wheelSeesawBlueS.setScale(1.4,1.4).setTranslation(0,-0.75);
 		wheelSeesawPurpleNW.setScale(1.1,1.1).setTranslation(-2,1.8);
 
+		//add seesaws to worldd
 		world.add(wheelSeesawGreenNE);
 		world.add(wheelSeesawBlueS);
 		world.add(wheelSeesawPurpleNW);
@@ -111,23 +109,6 @@
 
     }
 
-/**
-	var wheel = new SceneGraphNode();
-    wheel.doDraw = function(g) {
-		for (var i = 0; i< 5; i++){
-			var wheel_line = new TransformedObject(line);
-			wheel_line.setRotation(i*180/5);
-			world.add(wheel_line);
-		}
-		var wheel_circle = new TransformedObject(circle);
-        world.add(circle);
-	}
-
-	var wheel_bar = new SceneGraphNode();
-	wheel_bar.doDraw = function(g) {
-	}
-*/
-    
     /**
      * This method is called just before each frame is drawn.  It updates the modeling
      * transformations of the objects in the scene that are animated.
@@ -135,8 +116,7 @@
     function updateFrame() {
         frameNumber++;
 
-        // TODO: Update state in preparation for drawing the next frame.
-        //rotatingRect.setRotation(frameNumber*0.75); // (DELETE THIS EXAMPLE)
+		// roatae wheel bars on seesaws
 		rotatingLeftWheel.setRotation((frameNumber*0.75));
 		rotatingRightWheel.setRotation((frameNumber*0.75));
 		wheelBarForSeesawPurple.setRotation((frameNumber*0.75));

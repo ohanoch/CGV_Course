@@ -24,21 +24,48 @@
 
 
     // TODO: Define global variables to represent animated objects in the scene.
-    var rotatingRect;  // (DELETE THIS EXAMPLE)
-	var clockCircle;
-	var clock
+    var clockCircle;
+    var clock;
+	var world;
+	var tri;
+    var clock1;
+    var clock2;
+    var clock3;
+    var clock4;
+    var clock5;
+	var hourHand;
+	var minuteHand;
+    var finalTri;
+	var bg;
+
 
     /**
      *  Builds the data structure that represents the entire picture.
      */
     function createWorld() {
 
-        world = new CompoundObject();  // Root node for the scene graph.
-		clock = new CompoundObject();
+        world = new CompoundObject();  // Root node for the scene graph.			
+		clock = new CompoundObject();  // object for full clock (circle, and hands)
+		tri = new CompoundObject();   // object for zelda triangle
 
-        // TODO: Create objects and add them to the scene graph.
-        // rotatingRect = new TransformedObject(filledRect);   // (DELETE THIS EXAMPLE)
-	//circle.setScale(2,2).setColor("red"); 
+		bg = new TransformedObject(filledRect);  //background rectangle
+		bg.setScale(8,6);
+
+		tri1 = new TransformedObject(filledTriangle);  //bottom left triangle
+		tri1.setScale(2,2).setTranslation(-1,-2.5).setColor("yellow");
+		tri.add(tri1);
+
+		tri2 = new TransformedObject(filledTriangle);  //bottom right triangle
+		tri2.setScale(2,2).setTranslation(1,-2.5).setColor("yellow");
+		tri.add(tri2);
+	
+		tri3 = new TransformedObject(filledTriangle);  // top triangle
+		tri3.setScale(2,2).setTranslation(0,-0.5).setColor("yellow");
+		tri.add(tri3);
+
+		finalTri = new TransformedObject(tri); // zelda triangle
+
+		// add hands and circle to clock
 		clockCircle = new TransformedObject(circle);
 		clockCircle.setScale(4,4).setColor("red");
 		clock.add(clockCircle);
@@ -46,19 +73,27 @@
 		hourHand.setTranslation(0.5,0).setScale(1,4).setColor("blue");
 		clock.add(hourHand);
 		minuteHand = new TransformedObject(line);
-		minuteHand.setTranslation(1,0).setScale(2,2).setColor("blue");
+		minuteHand.setTranslation(1,0).setScale(2,2).setColor("pink");
 		clock.add(minuteHand);
 
-		var clock1 = new TransformedObject(clock);
-		clock1.setRotation(20).setTranslation(2,2).setScale(0.5,0.5);
-		var clock2 = new TransformedObject(clock);
-		clock2.setRotation(35).setTranslation(-1,-1).setScale(1.5,1);
-		var clock3 = new TransformedObject(clock);
-		var clock4 = new TransformedObject(clock);
-		clock4.setRotation(35).setTranslation(-1,1).setScale(1,1.5);		
-		var clock5 = new TransformedObject(clock);
-		clock5.setRotation(35).setTranslation(1,-1).setScale(1.2,1.5);		
+		// top right clock
+		clock1 = new TransformedObject(clock);
+		clock1.setRotation(129).setTranslation(2,2).setScale(0.5,0.5);
+		// bottom left clock
+		clock2 = new TransformedObject(clock);
+		clock2.setRotation(143).setTranslation(-1,-1).setScale(1.5,1);
+		// center clock
+		clock3 = new TransformedObject(clock);
+		// top left clock
+		clock4 = new TransformedObject(clock);
+		clock4.setRotation(91).setTranslation(-1,1).setScale(1,1.5);
+		// bottom right clock
+		clock5 = new TransformedObject(clock);
+		clock5.setRotation(19).setTranslation(1,-1).setScale(1.2,1.5);		
 
+		// add all elements to the world
+		world.add(bg);
+		world.add(finalTri);
 		world.add(clock1);
 		world.add(clock2);
 		world.add(clock3);
@@ -67,22 +102,6 @@
 
     }
 
-/**
-	var wheel = new SceneGraphNode();
-    wheel.doDraw = function(g) {
-		for (var i = 0; i< 5; i++){
-			var wheel_line = new TransformedObject(line);
-			wheel_line.setRotation(i*180/5);
-			world.add(wheel_line);
-		}
-		var wheel_circle = new TransformedObject(circle);
-        world.add(circle);
-	}
-
-	var wheel_bar = new SceneGraphNode();
-	wheel_bar.doDraw = function(g) {
-	}
-*/
     
     /**
      * This method is called just before each frame is drawn.  It updates the modeling
@@ -91,19 +110,35 @@
     function updateFrame() {
         frameNumber++;
 
-        // TODO: Update state in preparation for drawing the next frame.
-        //rotatingRect.setRotation(frameNumber*0.75); // (DELETE THIS EXAMPLE)
-		var hx = hourHand.translateX;
-		var hy = hourHand.translateY;
+		// hour hand rotation
+		var hx = hourHand.translateX;  //hour hand x axis location
+		var hy = hourHand.translateY;  //hout hand y axis location
 		var hl = Math.sqrt(Math.pow(hx,2)+Math.pow(hy,2))		
-		hourHand.setRotation(frameNumber*0.1);
-		hourHand.setTranslation(Math.cos((frameNumber*0.1)/180*Math.PI)*hl, Math.sin((frameNumber*0.1)/180*Math.PI)*hl);
+		hourHand.setRotation(frameNumber*(-0.1)); //rotating along center of hour hand clockwise
+		hourHand.setTranslation(Math.cos((frameNumber*(-0.1))/180*Math.PI)*hl, Math.sin((frameNumber*(-0.1))/180*Math.PI)*hl);  //move hand back to be from center of clock
 
-		var mx = minuteHand.translateX;
-		var my = minuteHand.translateY;
+		// minute hand rotation
+		var mx = minuteHand.translateX;  //minute hand x axis location
+		var my = minuteHand.translateY;  //minute hand y axis location
 		var ml = Math.sqrt(Math.pow(mx,2)+Math.pow(my,2))		
-		minuteHand.setRotation(frameNumber*0.5);
-		minuteHand.setTranslation(Math.cos((frameNumber*0.5)/180*Math.PI)*ml, Math.sin((frameNumber*0.5)/180*Math.PI)*ml);    
+		minuteHand.setRotation(frameNumber*0.5);  //rotating along center of minute hand counterclockwise
+		minuteHand.setTranslation(Math.cos((frameNumber*0.5)/180*Math.PI)*ml, Math.sin((frameNumber*0.5)/180*Math.PI)*ml);  //move hand back to be from center of clock
+
+		//rotate full clocks
+		clock2.setRotation(frameNumber);
+		clock5.setRotation(frameNumber*3*(-1));
+		clock4.setRotation(frameNumber*5*(-1));
+
+		//randomize background color
+		var r, g, b;
+		r = Math.floor(Math.random()*255)
+		g = Math.floor(Math.random()*255)
+		b = Math.floor(Math.random()*255)
+		bg.setColor("rgb(".concat(r.toString()).concat(",").concat(g.toString()).concat(",").concat(b.toString()).concat(")"));
+
+		// make zelda triangles large and small
+		var triScale = Math.abs(5-(frameNumber/10)%10);
+		finalTri.setScale(triScale,triScale)
 
     }
  
