@@ -18,6 +18,7 @@
 #include "polyhedron.h" // For access to the regular polyhedra from polyhedron.c.
 
 #include <math.h>
+#include <string.h>
 // --------------------------- Data for some materials ---------------------------------------------------
 
 /**
@@ -26,9 +27,11 @@
  * and item 12, a specular exponent (shininess value).  The data is adapted from the table on the page
  * http://devernay.free.fr/cours/opengl/materials.html
  */
-int NUM_OF_MATERIALS = 13;
+#define SIZE_OF_MATERIALS 13
+#define NUM_OF_MATERIALS 19
+#define MATERIAL_NAME_MAX_SIZE 30
 
-float materials[][NUM_OF_MATERIALS] = {
+float materials[][SIZE_OF_MATERIALS] = {
 	{ /* "emerald" */   0.0215f, 0.1745f, 0.0215f, 1.0f, 0.07568f, 0.61424f, 0.07568f, 1.0f, 0.633f, 0.727811f, 0.633f, 1.0f, 0.6f*128 },
 	{ /* "jade" */   0.135f, 0.2225f, 0.1575f, 1.0f, 0.54f, 0.89f, 0.63f, 1.0f, 0.316228f, 0.316228f, 0.316228f, 1.0f, 0.1f*128 },
 	{ /* "obsidian" */   0.05375f, 0.05f, 0.06625f, 1.0f, 0.18275f, 0.17f, 0.22525f, 1.0f, 0.332741f, 0.328634f, 0.346435f, 1.0f, 0.3f*128 },
@@ -47,9 +50,10 @@ float materials[][NUM_OF_MATERIALS] = {
 	{ /* "cyan rubber" */   0.0f, 0.05f, 0.05f, 1.0f, 0.4f, 0.5f, 0.5f, 1.0f, 0.04f, 0.7f, 0.7f, 1.0f, .078125f*128 },
 	{ /* "green rubber" */   0.0f, 0.05f, 0.0f, 1.0f, 0.4f, 0.5f, 0.4f, 1.0f, 0.04f, 0.7f, 0.04f, 1.0f, .078125f*128 },
 	{ /* "red rubber" */   0.05f, 0.0f, 0.0f, 1.0f, 0.5f, 0.4f, 0.4f, 1.0f, 0.7f, 0.04f, 0.04f, 1.0f, .078125f*128 },
+	{ /* "custom pi" */   0.3f, 0.1f, 0.4f, 0.1f, 0.5f, 0.9f, 0.2f, 0.6f, 0.5f, 0.3f, 0.05f, 0.8f, .9f*128 },
 };
 
-char materials_names[][13] = {"emerald","jade","obsidian","pearl","ruby","turquoise","brass","bronze","chrome","copper","gold","silver","cyan plastic","green plastic","red plastic","cyan rubber","green rubber","red rubber"};
+char materials_names[][MATERIAL_NAME_MAX_SIZE] = {"emerald","jade","obsidian","pearl","ruby","turquoise","brass","bronze","chrome","copper","gold","silver","cyan plastic","green plastic","red plastic","cyan rubber","green rubber","red rubber","custom pi"};
 
 int yRotation = 0;
 int xRotation = 0;
@@ -60,13 +64,81 @@ int X_ROTATION_LIMIT = 15;
  * If that string is found in the materials array then the current working gl material will be set to it.
  * This function has no output.
  */
-void setMaterial(char** request){
-	for(int i = 0; i < sizeof(materials_names)/sizeof(materials_names[1]); i++){
-		if(materials[i][0]){
+void setMaterial(char* request){
+	for(int i = 0; i < NUM_OF_MATERIALS; i++){
+		if(!strcmp(materials_names[i],request)){
+			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, materials[i]);
+			printf("color changed to: %s\n", materials_names[i]);
+			return;
 		}
 	}
+	printf("Attempted changing material to: %s FAILED.\n", request);
 } 
 
+/**
+ * This function accepts a polyhedron object and renders it on the stage.
+ * 3 options: faces only, lines only, or both.
+ * Face color only matters is glEnable(GL_COLOR_MATERIAL); is set. otherwise material takes preference
+ * Input: polyhedron object, mode. mode = 0,1,2 for fill,wire,both respectivly
+ * Output: No output
+*/
+void drawPolyhedron(Polyhedron poly, int mode){
+	createPolyhedra();
+	glPolygonOffset(1,1);
+
+	//loop twice, k=0 for face, k=1 for wire
+	for(int k=0; k<2; k++){
+		if(k==0){
+			//if mode = 1 we only want wire, thus we skip itteration 0 of for loop
+			if (mode == 1){
+				continue;
+			}
+
+			glEnable( GL_POLYGON_OFFSET_FILL );
+		}
+		
+		//if mode = 0 we only want fill, thus we skip itteration 1 of for loop	
+		if(k==1){
+			if(mode == 0){
+				return;
+			}
+			
+			glEnable(GL_COLOR_MATERIAL);
+		}
+		int currVertexIndex = 0;
+		for(int i=0; i<poly.faceCount; i++){
+			//if drawing faces set colors according to color array otherwise set color to black
+			if(k==0){
+				glBegin(GL_POLYGON);
+				if(poly.faceColors){
+					glColor3dv(&poly.faceColors[i*3]);
+				}
+			} else {
+				glBegin(GL_LINE_LOOP);
+				glColor3d(0,0,0);
+			}
+			glNormal3dv(&poly.normals[i*3]);
+			
+			//set vertecies of face
+			while(poly.faces[currVertexIndex]!=-1){
+				int currVertex = poly.faces[currVertexIndex];
+				glVertex3dv(&poly.vertices[currVertex*3]);
+				currVertexIndex++;
+			}
+			currVertexIndex++;
+
+			glEnd();
+		}
+
+		//Disable gl options enabled specifically for this rendering
+		if(k==0){
+			glDisable( GL_POLYGON_OFFSET_FILL );
+
+		} else {
+			glDisable(GL_COLOR_MATERIAL);
+		}
+	}
+}
 // ------------------------ OpenGL rendering and  initialization -----------------------
 
 /**
@@ -96,18 +168,52 @@ void display() {
 	
     // TODO draw some shapes!
 
-	//wire sphere front right corner
+	//wire sphere front right corner without lighting
 	glPushMatrix();
+	glDisable(GL_LIGHTING);
+	glColor3b(43,129,233);
+	glLineWidth(3);
 	glTranslatef(7.0,2,7.0);
     glutWireSphere(3.0, 10, 10);
+	glEnable(GL_LIGHTING);
 	glPopMatrix();    
 	
-	//glutSolidIcosahedron front right corner
+	//glutSolidIcosahedron front left corner in gold
 	glPushMatrix();
+	setMaterial("gold");
 	glTranslatef(-7.0,0.0,7.0);
 	glutSolidIcosahedron();
 	glPopMatrix();
+
+	//glutSolidTeapot back left corner using custom pi coloring
+	glPushMatrix();
+	setMaterial("custom pi");
+	glTranslatef(-7.0,-0.15,-7.0);
+	glutSolidTeapot(1);
+	glPopMatrix();
+
+	//Polyhedron filled house back right corner with colors defined by polyhedron
+	glPushMatrix();
+	glEnable(GL_COLOR_MATERIAL);
+	glTranslatef(7.0,0,-7.0);
+	drawPolyhedron(house, 0);
+	glDisable(GL_COLOR_MATERIAL);
+	glPopMatrix();
+
+	//Polyhedron wired stellatedDodecahedron left middle. wire color always black
+	glPushMatrix();
+	glTranslatef(-7.0,0,0);
+	drawPolyhedron(stellatedDodecahedron, 1);
+	glPopMatrix();
+
+	//Polyhedron truncatedRhombicDodecahedron filled and wired back middle color turquoise
+	glPushMatrix();
+	setMaterial("turquoise");
+	glTranslatef(0,1.1,-7.0);
+	drawPolyhedron(truncatedRhombicDodecahedron, 2);
+	glPopMatrix();
 	
+
     glutSwapBuffers();  // (Required for double-buffered drawing, at the end of display().)
 }
 
@@ -129,6 +235,28 @@ void initGL() {
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
     // TODO configure better lighting!
+	glEnable(GL_LIGHT1);
+	GLfloat light_ambient1[] = { 1.0, 1.0, 1.0, 1.0 };
+
+	GLfloat light_diffuse1[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light_specular1[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light_position1[] = { -0.5, 0.5, -0.5, 0.0 };
+
+	glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient1);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse1);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, light_specular1);
+	glLightfv(GL_LIGHT1, GL_POSITION, light_position1);
+
+	glEnable(GL_LIGHT2);
+	GLfloat light_ambient2[] = { 0.0, 0.0, 0.0, 1.0 };
+	GLfloat light_diffuse2[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light_specular2[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light_position2[] = { -0.5, 0.5, 0.5, 0.0 };
+
+	glLightfv(GL_LIGHT2, GL_AMBIENT, light_ambient2);
+	glLightfv(GL_LIGHT2, GL_DIFFUSE, light_diffuse2);
+	glLightfv(GL_LIGHT2, GL_SPECULAR, light_specular2);
+	glLightfv(GL_LIGHT2, GL_POSITION, light_position2);
 }  // end initGL()
 
 
