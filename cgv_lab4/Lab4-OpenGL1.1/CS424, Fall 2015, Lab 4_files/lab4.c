@@ -187,6 +187,7 @@ void ball_pipe_square(){
 	glPopMatrix();
 }
 
+//Draw cage with yellow balls as corners and purple pipes as connectors
 void full_cage(){
 
 	glPushMatrix();
