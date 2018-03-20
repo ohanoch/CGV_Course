@@ -84,9 +84,14 @@ void setMaterial(char* request){
  * Input: polyhedron object, mode. mode = 0,1,2 for fill,wire,both respectivly
  * Output: No output
 */
-void drawPolyhedron(Polyhedron poly, int mode, int useColor){
+void drawPolyhedron(Polyhedron poly, char* material, int mode, int useColor){
 	createPolyhedra();
 	glPolygonOffset(1,1);
+
+
+	if (useColor){
+		glEnable(GL_COLOR_MATERIAL);
+	}
 
 	//loop twice, k=0 for face, k=1 for wire
 	for(int k=0; k<2; k++){
@@ -95,19 +100,15 @@ void drawPolyhedron(Polyhedron poly, int mode, int useColor){
 			if (mode == 1){
 				continue;
 			}
-			if (useColor){
-				glEnable(GL_COLOR_MATERIAL);
-			}
 			glEnable( GL_POLYGON_OFFSET_FILL );
 		}
 		
 		//if mode = 0 we only want fill, thus we skip itteration 1 of for loop which does wire
-		if(k==1){
+		if(k == 1){
 			if(mode == 0){
-				return;
+				break;
 			}
 			glDisable(GL_LIGHTING);
-			glEnable(GL_COLOR_MATERIAL);
 		}
 		int currVertexIndex = 0;
 		for(int faceIndex = 0; faceIndex<poly.faceCount; faceIndex++){
@@ -119,10 +120,12 @@ void drawPolyhedron(Polyhedron poly, int mode, int useColor){
 			}
 
 			if (k == 1){
-				glColor3d(0,0,0); //set line number to black
+				//glColor3d(lineColors[0],lineColors[1],lineColors[2]); //set line number to black
 			}
 			else if(poly.faceColors && useColor){
 				glColor3dv(&poly.faceColors[faceIndex * 3]);
+			} else {
+				setMaterial(material);
 			}
 			
 			glNormal3dv(&poly.normals[faceIndex * 3]);
@@ -141,13 +144,12 @@ void drawPolyhedron(Polyhedron poly, int mode, int useColor){
 		//Disable gl options enabled specifically for this rendering
 		if(k==0){
 			glDisable( GL_POLYGON_OFFSET_FILL );
-			if(useColor){
-				glDisable(GL_COLOR_MATERIAL);
-			}
 		} else {
-			glDisable(GL_COLOR_MATERIAL);
 			glEnable(GL_LIGHTING);
 		}
+	}
+	if(useColor){
+		glDisable(GL_COLOR_MATERIAL);
 	}
 }
 // ------------------------ OpenGL rendering and  initialization -----------------------
@@ -206,21 +208,21 @@ void display() {
 	//Polyhedron filled house back right corner with colors defined by polyhedron
 	glPushMatrix();
 	glTranslatef(7.0,0,-7.0);
-	drawPolyhedron(house, 0, 1);
+	drawPolyhedron(house, "none",0, 1);
 	glPopMatrix();
 
-	//Polyhedron wired stellatedDodecahedron left middle.
+	//Polyhedron wired stellatedDodecahedron left middle. line color = blue
 	glPushMatrix();
-	setMaterial("ruby");
+	glColor3b(233,129,43);
 	glTranslatef(-7.0,0,0);
-	drawPolyhedron(stellatedDodecahedron, 1, 0);
+	drawPolyhedron(stellatedDodecahedron, "none", 1, 0);
 	glPopMatrix();
 
-	//Polyhedron truncatedRhombicDodecahedron filled and wired back middle color pearl
+	//Polyhedron truncatedRhombicDodecahedron filled and wired back middle. fill color = pearl. line color = green
 	glPushMatrix();
-	setMaterial("pearl");
+	glColor3b(129,43,233);
 	glTranslatef(-7.0,1.1,7.0);
-	drawPolyhedron(truncatedRhombicDodecahedron, 2, 0);
+	drawPolyhedron(truncatedRhombicDodecahedron, "gold", 2, 0);
 	glPopMatrix();
 	
 
