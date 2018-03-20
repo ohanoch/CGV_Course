@@ -68,6 +68,8 @@ void setMaterial(char* request){
 	for(int i = 0; i < NUM_OF_MATERIALS; i++){
 		if(!strcmp(materials_names[i],request)){
 			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, materials[i]);
+			glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, &materials[i][8]);
+			glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, &materials[i][12]);
 			printf("color changed to: %s\n", materials_names[i]);
 			return;
 		}
@@ -82,7 +84,7 @@ void setMaterial(char* request){
  * Input: polyhedron object, mode. mode = 0,1,2 for fill,wire,both respectivly
  * Output: No output
 */
-void drawPolyhedron(Polyhedron poly, int mode){
+void drawPolyhedron(Polyhedron poly, int mode, int useColor){
 	createPolyhedra();
 	glPolygonOffset(1,1);
 
@@ -93,36 +95,42 @@ void drawPolyhedron(Polyhedron poly, int mode){
 			if (mode == 1){
 				continue;
 			}
-
+			if (useColor){
+				glEnable(GL_COLOR_MATERIAL);
+			}
 			glEnable( GL_POLYGON_OFFSET_FILL );
 		}
 		
-		//if mode = 0 we only want fill, thus we skip itteration 1 of for loop	
+		//if mode = 0 we only want fill, thus we skip itteration 1 of for loop which does wire
 		if(k==1){
 			if(mode == 0){
 				return;
 			}
-			
+			glDisable(GL_LIGHTING);
 			glEnable(GL_COLOR_MATERIAL);
 		}
 		int currVertexIndex = 0;
-		for(int i=0; i<poly.faceCount; i++){
+		for(int faceIndex = 0; faceIndex<poly.faceCount; faceIndex++){
 			//if drawing faces set colors according to color array otherwise set color to black
 			if(k==0){
-				glBegin(GL_POLYGON);
-				if(poly.faceColors){
-					glColor3dv(&poly.faceColors[i*3]);
-				}
+				glBegin(GL_TRIANGLE_FAN);
 			} else {
 				glBegin(GL_LINE_LOOP);
-				glColor3d(0,0,0);
 			}
-			glNormal3dv(&poly.normals[i*3]);
+
+			if (k == 1){
+				glColor3d(0,0,0); //set line number to black
+			}
+			else if(poly.faceColors && useColor){
+				glColor3dv(&poly.faceColors[faceIndex * 3]);
+			}
 			
+			glNormal3dv(&poly.normals[faceIndex * 3]);
+
 			//set vertecies of face
-			while(poly.faces[currVertexIndex]!=-1){
-				int currVertex = poly.faces[currVertexIndex];
-				glVertex3dv(&poly.vertices[currVertex*3]);
+			while(poly.faces[currVertexIndex] != -1){
+				int currFaceVertexNum = poly.faces[currVertexIndex];
+				glVertex3dv(&poly.vertices[currFaceVertexNum * 3]);
 				currVertexIndex++;
 			}
 			currVertexIndex++;
@@ -133,9 +141,12 @@ void drawPolyhedron(Polyhedron poly, int mode){
 		//Disable gl options enabled specifically for this rendering
 		if(k==0){
 			glDisable( GL_POLYGON_OFFSET_FILL );
-
+			if(useColor){
+				glDisable(GL_COLOR_MATERIAL);
+			}
 		} else {
 			glDisable(GL_COLOR_MATERIAL);
+			glEnable(GL_LIGHTING);
 		}
 	}
 }
@@ -181,7 +192,7 @@ void display() {
 	//glutSolidIcosahedron front left corner in gold
 	glPushMatrix();
 	setMaterial("gold");
-	glTranslatef(-7.0,0.0,7.0);
+	glTranslatef(0.0,0.0,-7.0);
 	glutSolidIcosahedron();
 	glPopMatrix();
 
@@ -194,23 +205,22 @@ void display() {
 
 	//Polyhedron filled house back right corner with colors defined by polyhedron
 	glPushMatrix();
-	glEnable(GL_COLOR_MATERIAL);
 	glTranslatef(7.0,0,-7.0);
-	drawPolyhedron(house, 0);
-	glDisable(GL_COLOR_MATERIAL);
+	drawPolyhedron(house, 0, 1);
 	glPopMatrix();
 
-	//Polyhedron wired stellatedDodecahedron left middle. wire color always black
+	//Polyhedron wired stellatedDodecahedron left middle.
 	glPushMatrix();
+	setMaterial("ruby");
 	glTranslatef(-7.0,0,0);
-	drawPolyhedron(stellatedDodecahedron, 1);
+	drawPolyhedron(stellatedDodecahedron, 1, 0);
 	glPopMatrix();
 
-	//Polyhedron truncatedRhombicDodecahedron filled and wired back middle color turquoise
+	//Polyhedron truncatedRhombicDodecahedron filled and wired back middle color pearl
 	glPushMatrix();
-	setMaterial("turquoise");
-	glTranslatef(0,1.1,-7.0);
-	drawPolyhedron(truncatedRhombicDodecahedron, 2);
+	setMaterial("pearl");
+	glTranslatef(-7.0,1.1,7.0);
+	drawPolyhedron(truncatedRhombicDodecahedron, 2, 0);
 	glPopMatrix();
 	
 
@@ -235,28 +245,32 @@ void initGL() {
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
     // TODO configure better lighting!
-	glEnable(GL_LIGHT1);
-	GLfloat light_ambient1[] = { 1.0, 1.0, 1.0, 1.0 };
 
-	GLfloat light_diffuse1[] = { 1.0, 1.0, 1.0, 1.0 };
-	GLfloat light_specular1[] = { 1.0, 1.0, 1.0, 1.0 };
-	GLfloat light_position1[] = { -0.5, 0.5, -0.5, 0.0 };
+	//configure light1
+	glEnable(GL_LIGHT1);
+	GLfloat light_ambient1[] = { 0.3, 0.3, 0.3, 1.0 };
+	GLfloat light_diffuse1[] = { 0.3, 0.3, 0.3, 1.0 };
+	GLfloat light_specular1[] = { 0.2, 0.2, 0.2, 1.0 };
+	GLfloat light_position1[] = { 0.0, 50, 0.0, 0.0 };
 
 	glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient1);
 	glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse1);
 	glLightfv(GL_LIGHT1, GL_SPECULAR, light_specular1);
 	glLightfv(GL_LIGHT1, GL_POSITION, light_position1);
 
+	//configure light2
+	
 	glEnable(GL_LIGHT2);
 	GLfloat light_ambient2[] = { 0.0, 0.0, 0.0, 1.0 };
-	GLfloat light_diffuse2[] = { 1.0, 1.0, 1.0, 1.0 };
-	GLfloat light_specular2[] = { 1.0, 1.0, 1.0, 1.0 };
-	GLfloat light_position2[] = { -0.5, 0.5, 0.5, 0.0 };
+	GLfloat light_diffuse2[] = { 0.3, 0.3, 0.3, 1.0 };
+	GLfloat light_specular2[] = { 0.4, 0.4, 0.4, 1.0 };
+	GLfloat light_position2[] = { 0.0, 0.0, -50, 0.0 };
 
 	glLightfv(GL_LIGHT2, GL_AMBIENT, light_ambient2);
 	glLightfv(GL_LIGHT2, GL_DIFFUSE, light_diffuse2);
 	glLightfv(GL_LIGHT2, GL_SPECULAR, light_specular2);
 	glLightfv(GL_LIGHT2, GL_POSITION, light_position2);
+
 }  // end initGL()
 
 
