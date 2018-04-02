@@ -17,13 +17,149 @@ var controls;  // An OrbitControls object that is used to implement
 var animating = false;  // Set to true when an animation is in progress.
 var frameNumber = 0;  // Frame number is advanced by 1 for each frame while animating.
 
-var tempObject;  // A temporary animated object.  DELETE IT.
+var horse = new THREE.Object3D();
+var merryGoRound = new THREE.Group();
+var globe;
+var currObjectName = "";
 
+var HORSE_SCALE = 0.02;
+var NUM_HORSES = 8;
+var HORSE_BOUNCE_HIGHT = 1.5;
+var MERRY_GO_ROUND_RADIUS = 8.0;
+var POLE_THICKNESS = 0.2;
+var HOURSE_HEIGHT = 2;
+
+/**********************************************************************************************************
+ * 									MY FUNCTIONS
+ ***********************************************************************************************************/
+
+function makeTexture(imageURL, material) {
+    function callback() {
+        if (material) {
+            material.map = texture;
+            material.needsUpdate = true;
+        }
+        render();  // render scene with texture that has just been loaded.
+    }
+    var texture = THREE.ImageUtils.loadTexture(imageURL, undefined, callback);
+    return texture;
+}
+
+function loadModel(url, name){ // Call this function to load the model.
+	console.log("Loading object: " + name);
+	currObjectName = name;
+	var loader = new THREE.JSONLoader();
+	loader.load(url, modelLoaded); // Start load, call model Loaded when done.
+}
+
+function modelLoaded(geometry, materials){ //callback function for loader
+	var mat = new THREE.MeshLambertMaterial({vertexColors: THREE.FaceColors});
+
+	//if statements to add proper object
+	if (currObjectName == "horse"){
+		horse = new THREE.Mesh(geometry, mat);
+		horse.scale.set(HORSE_SCALE, HORSE_SCALE, HORSE_SCALE);
+		horse.rotateY(-1*Math.PI/2);
+		console.log("Loaded horse object");
+	}
+
+	//create merry-go-round
+	for(var i = 0; i < 8/*NUM_HORSES*/; i++){
+		var position; // determines position of horses
+
+		merryGoRound.rotateY(-2*Math.PI/NUM_HORSES);
+		merryGoRound.updateMatrixWorld();
+
+		var horseCopy = horse.clone();
+	
+		horseCopy.material = new THREE.MeshLambertMaterial({color: Math.random() * 0xffffff});	
+
+		// put horses at alternating hights
+		//if (i % 2 == 0){
+		//	position = new THREE.Vector3(0,HORSE_BOUNCE_HIGHT,MERRY_GO_ROUND_RADIUS);
+		//} else {
+		//	position = new THREE.Vector3(0,-1*HORSE_BOUNCE_HIGHT,MERRY_GO_ROUND_RADIUS);
+		//}
+		horseCopy.position.copy(new THREE.Vector3(0,0,MERRY_GO_ROUND_RADIUS));
+		horseCopy.rotateY(2*(i+1)*Math.PI/NUM_HORSES);
+		
+		// create cylinders for poles of the merrygoround
+		var cylinder = new THREE.Mesh(
+			new THREE.CylinderGeometry(
+				POLE_THICKNESS,
+				POLE_THICKNESS,
+				2*HORSE_BOUNCE_HIGHT+4,
+				40,
+				1
+			),
+			new THREE.MeshLambertMaterial({
+				color: "white",
+				map: makeTexture("resources/paisley.jpg")
+			})
+		);	
+		
+		cylinder.position.copy(new THREE.Vector3(0,HOURSE_HEIGHT,MERRY_GO_ROUND_RADIUS));		
+
+		//add cylinder and horse to merrygoround
+		merryGoRound.worldToLocal(cylinder.position);
+		merryGoRound.add(cylinder);
+		merryGoRound.worldToLocal(horseCopy.position);
+		merryGoRound.add(horseCopy);
+		
+		console.log("horse %d added to merry-go-round", i);
+	}
+
+	// add top of merrygoround
+	var topMGR = new THREE.Mesh(
+		new THREE.CylinderGeometry(
+			0,
+			MERRY_GO_ROUND_RADIUS+5,
+			3,
+			40,
+			1),
+		new THREE.MeshBasicMaterial({
+			color: 0xff00ff})
+		);
+	topMGR.translateY(HORSE_BOUNCE_HIGHT+5);
+	merryGoRound.add(topMGR);
+
+	// add base of merrygoround
+	var bottomMGR = new THREE.Mesh(
+		new THREE.CylinderGeometry(
+			MERRY_GO_ROUND_RADIUS+5,
+			MERRY_GO_ROUND_RADIUS+5,
+			0.75,
+			40,
+			1),
+		new THREE.MeshBasicMaterial({
+			color: 0xff00ff})
+		);
+	bottomMGR.translateY(HORSE_BOUNCE_HIGHT-3.375);
+	merryGoRound.add(bottomMGR);
+
+	// add globe to merrygoround
+	globe = new THREE.Mesh(
+        new THREE.SphereGeometry( 3,32,16 ),
+        new THREE.MeshLambertMaterial({
+            color: "white",
+            map: makeTexture("resources/earth.jpg")
+        })
+    );
+	globe.translateY(HOURSE_HEIGHT);
+	merryGoRound.add(globe);
+
+	scene.add(merryGoRound);
+	render(); //only need this if there is no animation running
+}
+/**********************************************************************************************************
+									SKELETON
+ *********************************************************************************************************/
 
 /**
  *  The render function draws the scene.
  */
 function render() {
+	console.log("rendering");
     renderer.render(scene, camera);
 }
 
@@ -47,19 +183,10 @@ function createWorld() {
     scene.add(camera);
     
     //------------------- Create the scene's visible objects ----------------------
-    
-    tempObject =  new THREE.Mesh(  // DELETE THIS !
-        new THREE.CylinderGeometry(2,4,8,6,1),
-        new THREE.MeshPhongMaterial({
-            color: 0x66BBFF,
-            specular: 0x222222,
-            shininess: 16,
-            shading: THREE.FlatShading
-        })
-    );
-    tempObject.rotation.y = Math.PI/12;
-    scene.add(tempObject);
-    
+
+	//load horse model and do everything else cause javascript sucks
+	loadModel("resources/horse.js", "horse");
+
 } // end function createWorld()
 
 
@@ -76,10 +203,21 @@ function updateForFrame() {
     if (loopFrame > 120) {
         loopFrame = 240 - loopFrame;
     }
-    var scaleFactor = 1 + loopFrame/120;
-    tempObject.scale.set(scaleFactor,scaleFactor,scaleFactor);
-    tempObject.rotation.y += 0.01;
+    var scaleFactor = (-0.5 +  loopFrame/120);
     
+	// rotate merry-go-round
+	merryGoRound.rotateY(-0.01);
+
+	//make horses move up and down
+	for(var i = 0; i < NUM_HORSES; i++){
+		var currHorse = merryGoRound.children[i*2+1]
+		
+		if(i % 2){
+			currHorse.translateY(Math.sign(scaleFactor) * 0.022);
+		} else {
+			currHorse.translateY(-1 * Math.sign(scaleFactor) * 0.022);
+		}
+	}
 }
 
 
