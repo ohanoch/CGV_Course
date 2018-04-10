@@ -53,22 +53,25 @@ var ballHolder;   // An object of type THREE.Object3D that will be the parent of
 var BALL_COUNT = 15;   // Number of balls to be created.
 var BALL_RADIUS = 1.5; // Radius for each balls (the size of the box that contains them is 20).
 
+var texture;
+
 /**
  *  Creates the bouncing balls and the translucent cube in which the balls bounce,
  *  and adds them to the scene.  A light that shines from the direction of the
  *  camera's view is also bundled with the camera and added to the scene.
  */
 function createWorld() {
-		var textureURLs = [  // URLs of the six faces of the cube map 
-			"Coliseum/posx.jpg",   // Note:  The order in which
-			"Coliseum/negx.jpg",   //   the images are listed is
-			"Coliseum/posy.jpg",   //   important!
-			"Coliseum/negy.jpg",  
-			"Coliseum/posz.jpg",   
-			"Coliseum/negz.jpg"
-	   ];
+	//create collosium skybox
+	var textureURLs = [  // URLs of the six faces of the cube map 
+		"Coliseum/posx.jpg",   // Note:  The order in which
+		"Coliseum/negx.jpg",   //   the images are listed is
+		"Coliseum/posy.jpg",   //   important!
+		"Coliseum/negy.jpg",  
+		"Coliseum/posz.jpg",   
+		"Coliseum/negz.jpg"
+	];
 
-	var texture = THREE.ImageUtils.loadTextureCube( textureURLs );
+	texture = THREE.ImageUtils.loadTextureCube( textureURLs );
 
 	var shader = THREE.ShaderLib[ "cube" ]; // contains the required shaders
 	shader.uniforms[ "tCube" ].value = texture; // data for the shaders
@@ -95,7 +98,8 @@ function createWorld() {
     camera.add(light);
     scene.add(camera);
     
-	scene.add(skybox);
+	scene.add(skybox); //add skybox to scene
+
     /* Add a bit of ambient light, to brighten things up */
     scene.add(new THREE.AmbientLight( 0x101010 ));
 
@@ -132,7 +136,8 @@ function createWorld() {
         ball.obj = new THREE.Mesh( 
             geom, 
             new THREE.MeshLambertMaterial( {
-                color: new THREE.Color(r,g,b)
+                color: new THREE.Color(r,g,b),
+				envMap: texture  // Cubemap texture to be used as an environment map.
             })
         );
 
@@ -265,7 +270,8 @@ function doMouseDown(evt){
 					ball.obj = new THREE.Mesh( 
 						geom, 
 						new THREE.MeshLambertMaterial( {
-							color: new THREE.Color(1,1,1)
+							color: new THREE.Color(1,1,1),
+							envMap: texture  // Cubemap texture to be used as an environment map.
 						})
 					);
 
