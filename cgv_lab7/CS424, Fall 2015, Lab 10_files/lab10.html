@@ -50,7 +50,7 @@ var ballHolder;   // An object of type THREE.Object3D that will be the parent of
                   // all the spheres in the scene graph.  This is used only to make
                   // it easier to use a Raycaster for user input.
 
-var BALL_COUNT = 2;   // Number of balls to be created.
+var BALL_COUNT = 15;   // Number of balls to be created.
 var BALL_RADIUS = 1.5; // Radius for each balls (the size of the box that contains them is 20).
 
 /**
@@ -222,14 +222,54 @@ function doMouseDown(evt){
 	console.log("aaaaa" + intersections)
 	if(intersections.length >= 1){
 		for(var i = 0; i < balls.length; i++){
+			//if location of intersected ball is the same of balls[i] and is not a small ball
+			// then remove the ball and add 2 small balls in its place
 			if(balls[i].x == intersections[0].object.position.x &&
 				balls[i].y == intersections[0].object.position.y &&
 				balls[i].z == intersections[0].object.position.z){
+				//remove ball
 				ballHolder.remove(balls[i].obj);
 				balls.splice(i, 1);
 				BALL_COUNT--;
-				render();
 				console.log("ball removed");
+
+				//add 2 small balls in its place
+				var geom = new THREE.SphereGeometry(BALL_RADIUS/2,20,12);  // Geometry will be reused for all the balls.
+				for(var j=0; j<2; j++){
+					var ball = {};  // object will contain a sphere plus its position and velocity info
+					balls.push(ball);
+					
+					ball.obj = new THREE.Mesh( 
+						geom, 
+						new THREE.MeshLambertMaterial( {
+							color: new THREE.Color(1,1,1)
+						})
+					);
+
+					ball.radius = BALL_RADIUS / 2;
+				
+					// set ball position to same as old ball
+					ball.x = intersections[0].object.position.x;
+					ball.y = intersections[0].object.position.y;
+					ball.z = intersections[0].object.position.z;
+
+					// set random ball velocity, in units per second
+					ball.dx = Math.random() * 10 + 3;
+					ball.dy = Math.random() * 10 + 3;
+					ball.dz = Math.random() * 10 + 3;
+					if (Math.random() < 0.5)
+						ball.dx = -ball.dx;
+					if (Math.random() < 0.5)
+						ball.dy = -ball.dy;
+					if (Math.random() < 0.5)
+						ball.dz = -ball.dz;
+
+					ball.obj.position.set( ball.x, ball.y, ball.z);
+					ballHolder.add(ball.obj);
+				}
+				console.log("2 balls added");
+
+				render();
 				break;
 			}
 		}		
