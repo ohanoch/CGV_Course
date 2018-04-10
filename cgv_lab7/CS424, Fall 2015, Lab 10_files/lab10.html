@@ -59,6 +59,29 @@ var BALL_RADIUS = 1.5; // Radius for each balls (the size of the box that contai
  *  camera's view is also bundled with the camera and added to the scene.
  */
 function createWorld() {
+		var textureURLs = [  // URLs of the six faces of the cube map 
+			"Coliseum/posx.jpg",   // Note:  The order in which
+			"Coliseum/negx.jpg",   //   the images are listed is
+			"Coliseum/posy.jpg",   //   important!
+			"Coliseum/negy.jpg",  
+			"Coliseum/posz.jpg",   
+			"Coliseum/negz.jpg"
+	   ];
+
+	var texture = THREE.ImageUtils.loadTextureCube( textureURLs );
+
+	var shader = THREE.ShaderLib[ "cube" ]; // contains the required shaders
+	shader.uniforms[ "tCube" ].value = texture; // data for the shaders
+	var material = new THREE.ShaderMaterial( {
+			// A ShaderMaterial uses custom vertex and fragment shaders.
+		fragmentShader: shader.fragmentShader,
+		vertexShader: shader.vertexShader,
+		uniforms: shader.uniforms, 
+		depthWrite: false,
+		side: THREE.BackSide
+	} );
+
+	var skybox = new THREE.Mesh( new THREE.CubeGeometry( 100, 100, 100 ), material );
 
     renderer.setClearColor( 0 );  // black background
     scene = new THREE.Scene();
@@ -72,6 +95,7 @@ function createWorld() {
     camera.add(light);
     scene.add(camera);
     
+	scene.add(skybox);
     /* Add a bit of ambient light, to brighten things up */
     scene.add(new THREE.AmbientLight( 0x101010 ));
 
@@ -219,7 +243,6 @@ function doMouseDown(evt){
 	raycaster.setFromCamera( new THREE.Vector2(a,b), camera );
 
 	var intersections = raycaster.intersectObjects( ballHolder.children, true );
-	console.log("aaaaa" + intersections)
 	if(intersections.length >= 1){
 		for(var i = 0; i < balls.length; i++){
 			//if location of intersected ball is the same of balls[i] and is not a small ball
