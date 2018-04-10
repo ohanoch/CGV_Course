@@ -77,12 +77,6 @@ function modelLoaded(geometry, materials){ //callback function for loader
 	
 		horseCopy.material = new THREE.MeshLambertMaterial({color: Math.random() * 0xffffff});	
 
-		// put horses at alternating hights
-		//if (i % 2 == 0){
-		//	position = new THREE.Vector3(0,HORSE_BOUNCE_HIGHT,MERRY_GO_ROUND_RADIUS);
-		//} else {
-		//	position = new THREE.Vector3(0,-1*HORSE_BOUNCE_HIGHT,MERRY_GO_ROUND_RADIUS);
-		//}
 		horseCopy.position.copy(new THREE.Vector3(0,0,MERRY_GO_ROUND_RADIUS));
 		horseCopy.rotateY(2*(i+1)*Math.PI/NUM_HORSES);
 		
@@ -159,9 +153,11 @@ function modelLoaded(geometry, materials){ //callback function for loader
 	globe.translateY(HOURSE_HEIGHT);
 	merryGoRound.add(globe);
 
+	// adding light from center of merrygoround
 	var lightMGR = new THREE.PointLight("gold", 0.5);
 	merryGoRound.add(lightMGR);
 
+	//moving merrygoround to desired location on scene
 	merryGoRound.translateX(7);
 	merryGoRound.scale.set(0.5,0.5,0.5);
 
@@ -204,7 +200,9 @@ function createWorld() {
 	//load horse model and do everything else cause javascript sucks
 	loadModel("resources/horse.js", "horse");
 
+	//create cage with spheres on corners
 	for(var i = 0; i < 4; i++){
+		//create cylinders with brick texture for cage bars
 		var cylinder = new THREE.Mesh(
 			new THREE.CylinderGeometry(
 				POLE_THICKNESS,
@@ -218,7 +216,8 @@ function createWorld() {
 				map: makeTexture("resources/brick.jpg")
 			})
 		);
-
+		
+		// move y axis cylinders to place
 		if (i<2){
 			cylinder.translateX(Math.pow(-1, i) * CUBE_SIZE / 2);
 			cylinder.translateZ(Math.pow(-1, i) * CUBE_SIZE / 2);
@@ -229,6 +228,7 @@ function createWorld() {
 
 		cube.add(cylinder);
 
+		//create z axis cylinders and move to place
 		var cylinder2 = cylinder.clone();
 		
 		if (i<2){
@@ -242,6 +242,7 @@ function createWorld() {
 
 		cube.add(cylinder2);
 		
+		// create x axis cylinders and move to place
 		var cylinder3 = cylinder.clone();
 		
 		if (i<2){
@@ -255,6 +256,8 @@ function createWorld() {
 
 		cube.add(cylinder3);
 
+		// create corner spheres and move to place
+		//(4 spheres are redundant but i moved on to next lab when realizing it and am too lazy to fix it now)
 		var sphere = new THREE.Mesh(
 			new THREE.SphereGeometry( 0.5,32,16 ),
 			new THREE.MeshLambertMaterial({
@@ -298,6 +301,7 @@ function createWorld() {
 		cube.add(sphere2);
 	}
 
+	//move cage to desired location and add to scene
 	cube.translateX(-5);
 	scene.add(cube);
 	
