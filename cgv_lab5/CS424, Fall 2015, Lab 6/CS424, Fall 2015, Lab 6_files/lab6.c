@@ -68,6 +68,7 @@ void setMaterial(char* request){
 	for(int i = 0; i < NUM_OF_MATERIALS; i++){
 		if(!strcmp(materials_names[i],request)){
 			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, materials[i]);
+			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, materials[i]);
 			glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, &materials[i][8]);
 			glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, &materials[i][12]);
 			printf("color changed to: %s\n", materials_names[i]);
