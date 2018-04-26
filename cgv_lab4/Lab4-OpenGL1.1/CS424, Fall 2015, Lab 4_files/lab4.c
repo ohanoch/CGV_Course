@@ -193,7 +193,7 @@ void full_cage(){
 	glPushMatrix();
 	glTranslatef(0.0,0.0,4.0);
 	ball_pipe_square();
-	glPopMatrix()
+	glPopMatrix();
 
 	glPushMatrix();
 	glTranslatef(0.0,0.0,-4.0);
